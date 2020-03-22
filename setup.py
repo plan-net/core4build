@@ -16,4 +16,9 @@ setup(
     zip_safe=False
 )
 
+import sys
+
+print("*"*80)
+print(sys.executable)
+print(sys.argv)
 print("*"*80)
