@@ -1,6 +1,5 @@
-from setuptools import find_packages
-from setuptools import setup
 
+from setuptools import setup
 
 setup(
     name='core4build',
@@ -11,10 +10,8 @@ setup(
                 "integration, and information/workflow automation to "
                 "web-based business applications.",
     url="https://github.com/plan-net/core4",
-    packages=find_packages(exclude=['docs', 'tests*', 'project*', 'example*',
-                                    'other*']),
+    packages=["core4build"],
     include_package_data=True,
-    install_requires=[
-    ],
+    install_requires=[],
     zip_safe=False
 )
