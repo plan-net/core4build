@@ -21,5 +21,6 @@ import sys
 print("*"*80)
 print(sys.executable)
 print(sys.argv)
-input()
 print("*"*80)
+import time
+time.sleep(30)
