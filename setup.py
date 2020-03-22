@@ -15,3 +15,5 @@ setup(
     install_requires=[],
     zip_safe=False
 )
+
+print("*"*80)
