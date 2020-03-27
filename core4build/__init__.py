@@ -75,6 +75,7 @@ for elem in sys.argv[1:]:
     swallow = False
     if elem.lower() == "--help" or elem.lower() == "-h":
         print_help()
+        sys.exit(0)
     if elem.lower() == "--verbose" or elem.lower() == "-v":
         VERBOSE = 1
         swallow = True
