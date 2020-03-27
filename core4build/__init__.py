@@ -369,7 +369,7 @@ def setup(*args, **kwargs):
         output("runtime {} ({}')", delta, int(delta.total_seconds()))
     else:
         if "CORE4_CALL" not in os.environ:
-            output("ERROR!\n")
+            output("ERROR!")
             print_help()
         else:
             check_requirements()
