@@ -20,3 +20,8 @@ Use in ``setup.py`` of core4os projects with:
         include_package_data=True,
         install_requires=[...]
     )
+
+
+Install projects with:
+
+    $ python setup.py

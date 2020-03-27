@@ -47,6 +47,22 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 
+def print_help():
+    print("""
+usage: python setup.py
+
+Global options:
+  --verbose (-v)      run verbosely
+  --quiet (-q)        run quietly
+  --help (-h)         show detailed help message
+  
+Install options:
+  --test (-t)         don't actually do anything
+  --nofe (-n)         skip webapps build and install
+  --edit (-e)         install in editable mode (develop mode)
+""")
+
+
 environ = os.environ.copy()
 
 option = {}
@@ -57,6 +73,8 @@ TEST = False
 environ["CORE4_FE"] = "1"
 for elem in sys.argv[1:]:
     swallow = False
+    if elem.lower() == "--help" or elem.lower() == "-h":
+        print_help()
     if elem.lower() == "--verbose" or elem.lower() == "-v":
         VERBOSE = 1
         swallow = True
@@ -351,7 +369,8 @@ def setup(*args, **kwargs):
         output("runtime {} ({}')", delta, int(delta.total_seconds()))
     else:
         if "CORE4_CALL" not in os.environ:
-            output("ERROR!\nuse with $ python setup.py")
+            output("ERROR!\n")
+            print_help()
         else:
             check_requirements()
             kwargs["cmdclass"] = {
