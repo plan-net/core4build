@@ -10,7 +10,7 @@ Use in ``setup.py`` of core4os projects with:
     except:
         from pip import main
     
-    main(["install", "git+https://github.com/plan-net/core4build.git"])
+    main(["install", "--quiet", git+https://github.com/plan-net/core4build.git"])
     from core4build import setup
     
     setup(
