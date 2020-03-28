@@ -32,7 +32,7 @@ import datetime
 PIP_REQUIRED = (19, 0, 0)
 WHEEL_REQUIRED = (0, 34, 0)
 CORE4_SOURCE = "https://github.com/plan-net/core4.git@develop.auth"
-
+RLIB = "../lib/R"
 CWD = os.path.abspath(os.curdir)
 
 
@@ -178,7 +178,7 @@ def upgrade_framework(builddir, current, source):
         git_clone(url, target)
         git_checkout(target, branch)
     os.chdir(target)
-    environ["CORE4_CALL"] = "1"
+    #environ["CORE4_CALL"] = "1"
     cmd = [shutil.which("pip"), "install", "--upgrade", "."]
     if VERBOSE == 1:
         cmd.insert(1, "--verbose")
@@ -287,7 +287,7 @@ def upgrade_package(current, version):
         cmd.insert(1, "--verbose")
     elif VERBOSE == -1:
         cmd.insert(1, "--quiet")
-    environ["CORE4_CALL"] = "1"
+    #environ["CORE4_CALL"] = "1"
     Popen(cmd, env=environ).wait()
     return proj_commit
 
@@ -331,6 +331,12 @@ def find_lib(name):
 def setup(*args, **kwargs):
     if len(sys.argv) == 1:
         t0 = datetime.datetime.now()
+        rlib = os.path.join(os.path.dirname(sys.executable), RLIB)
+        if not os.path.exists(rlib):
+            output("create {}", rlib)
+            if not TEST:
+                os.mkdir(rlib)
+                os.chmod(rlib, 0o777)
         builddir = tempfile.mkdtemp(prefix="c4-")
         output("build in {}", builddir)
         pkg_info = find_lib(kwargs["name"])
@@ -341,9 +347,13 @@ def setup(*args, **kwargs):
             info = {}
         upgrade_pip()
         upgrade_wheel()
-        core4_source = kwargs.pop("core4", CORE4_SOURCE)
-        core4_commit = upgrade_framework(
-            builddir, info.get("core4_commit", None), core4_source)
+        if kwargs.get("name") != "core4":
+            core4_source = kwargs.pop("core4", CORE4_SOURCE)
+            core4_commit = upgrade_framework(
+                builddir, info.get("core4_commit", None), core4_source)
+        else:
+            core4_source = None
+            core4_commit = None
         proj_version = kwargs.get("version", None)
         proj_commit = upgrade_package(info.get("project_commit", None),
                                       proj_version)
@@ -369,13 +379,9 @@ def setup(*args, **kwargs):
             output("failed to write build info")
         output("runtime {} ({}')", delta, int(delta.total_seconds()))
     else:
-        if "CORE4_CALL" not in os.environ:
-            output("ERROR!")
-            print_help()
-        else:
-            check_requirements()
-            kwargs["cmdclass"] = {
-                'build_py': BuildPyCommand,
-                'develop': DevelopCommand
-            }
-            orig_setup(**kwargs)
+        check_requirements()
+        kwargs["cmdclass"] = {
+            'build_py': BuildPyCommand,
+            'develop': DevelopCommand
+        }
+        orig_setup(**kwargs)
