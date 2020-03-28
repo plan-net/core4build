@@ -378,6 +378,13 @@ def setup(*args, **kwargs):
         else:
             output("failed to write build info")
         output("runtime {} ({}')", delta, int(delta.total_seconds()))
+        if ((proj_commit == info.get("project_commit", None))
+                and (core4_commit == info.get("core4_commit", None))):
+            output("result: no changes")
+            sys.exit(10)
+        else:
+            output("result: upgrade")
+            sys.exit(0)
     else:
         check_requirements()
         kwargs["cmdclass"] = {
