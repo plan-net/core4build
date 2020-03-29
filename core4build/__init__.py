@@ -19,7 +19,7 @@ except:
 
 import sys
 import shutil
-from subprocess import Popen, check_output
+from subprocess import Popen, check_output, call
 import os
 from setuptools import setup as orig_setup
 from setuptools.command.build_py import build_py
@@ -58,19 +58,18 @@ Global options:
   
 Install options:
   --test (-t)         don't actually do anything
-  --nofe (-n)         skip webapps build and install
+  --fe (-f)           build and install webapps
+  --fe2 (-ff)         build and install core4os framework webapps
   --edit (-e)         install in editable mode (develop mode)
 """)
 
-
-environ = os.environ.copy()
 
 option = {}
 argument = [sys.argv[0]]
 VERBOSE = 0
 EDIT = False
 TEST = False
-environ["CORE4_FE"] = "1"
+CORE4_FE = int(os.environ.get("CORE4_FE", "0"))
 for elem in sys.argv[1:]:
     swallow = False
     if elem.lower() == "--help" or elem.lower() == "-h":
@@ -82,8 +81,11 @@ for elem in sys.argv[1:]:
     elif elem.lower() == "--quiet" or elem.lower() == "-q":
         VERBOSE = -1
         swallow = True
-    if elem.lower() == "--nofe" or elem.lower() == "-n":
-        environ["CORE4_FE"] = "0"
+    if elem.lower() == "--fe" or elem.lower() == "-f":
+        CORE4_FE = 1
+        swallow = True
+    elif elem.lower() == "--fe2" or elem.lower() == "-ff":
+        CORE4_FE = 2
         swallow = True
     if elem.lower() == "--edit" or elem.lower() == "-e":
         EDIT = True
@@ -154,21 +156,22 @@ def get_git_commit(url):
     return out.strip().split()[0]
 
 
-def upgrade_framework(builddir, current, source):
-    commit = get_git_commit(source)
+def upgrade_framework(builddir, source, installed_commit, latest_commit,
+                      force):
     if parse_version(core4_version) == (0, 0, 0):
-        output("install core4 from {} at {}", source, commit)
+        output("core4 upgrade from {} at {}", source, latest_commit)
     else:
-        if current != commit:
-            output("upgrading core4 from {}, {} => {}", source, current, commit)
+        if latest_commit != installed_commit or force:
+            output("core4 upgrade from {}, {} => {}", source,
+                   installed_commit, latest_commit)
         else:
             output(
                 "skip core4 upgrade from {}, up-to-date at {} ({})", source,
-                current, core4_version)
-            return commit
+                installed_commit, core4_version)
+            return False
     if TEST:
         output("DRY RUN!")
-        return commit
+        return True
     target = os.path.join(builddir, "core4.src")
     output("clone core4 source tree from {}", source)
     if CORE4_SOURCE.startswith("/"):
@@ -178,15 +181,18 @@ def upgrade_framework(builddir, current, source):
         git_clone(url, target)
         git_checkout(target, branch)
     os.chdir(target)
-    #environ["CORE4_CALL"] = "1"
-    cmd = [shutil.which("pip"), "install", "--upgrade", "."]
+    cmd = [shutil.which("pip")]
     if VERBOSE == 1:
-        cmd.insert(1, "--verbose")
+        cmd.append("--verbose")
     elif VERBOSE == -1:
-        cmd.insert(1, "--quiet")
-    Popen(cmd, env=environ).wait()
+        cmd.append("--quiet")
+    cmd += ["install", "."]
+    env = os.environ.copy()
+    if CORE4_FE == 2:
+        env["CORE4_FE"] = "1"
+    Popen(cmd, env=env).wait()
     os.chdir(CWD)
-    return commit
+    return True
 
 
 def find_webapps(folder):
@@ -215,7 +221,7 @@ def find_webapps(folder):
 
 
 def build_webapp(packages):
-    if os.environ.get("CORE4_FE") == "1":
+    if CORE4_FE != 0:
         output("build webapps: {}", os.path.abspath(os.curdir))
         manifest = []
         for pkg in packages:
@@ -259,27 +265,22 @@ def restore_manifest():
 
 def check_requirements():
     for m in ("pip", "wheel"):
-        try:
-            v = check_output([
-                sys.executable, "-c",
-                "import {m}; print({m}.__version__)".format(m=m)],
-                universal_newlines=True)
-            s = "verified"
-        except:
-            s = "failed"
-        output("{m} {v} ({s})", m=m, v=v.strip(), s=s)
+        call([
+            sys.executable, "-c",
+            "import {m}; print({m}.__version__)".format(m=m)],
+            universal_newlines=True)
 
 
-def upgrade_package(current, version):
-    proj_commit = check_output(
-        ["git", "rev-parse", "HEAD"], universal_newlines=True).strip()
-    if proj_commit == current:
-        output("skip project upgrade, up-to-date at {} ({})", current, version)
-        return proj_commit
-    output("project upgrade {} => {} ({})", current, proj_commit, version)
+def upgrade_package(installed_commit, latest_commit, version, force):
+    if installed_commit == latest_commit and not force:
+        output("skip project upgrade, up-to-date at {} ({})", installed_commit,
+               version)
+        return False
+    output("project upgrade {} => {} ({})", installed_commit, latest_commit,
+           version)
     if TEST:
         output("DRY RUN!")
-        return proj_commit
+        return True
     cmd = [shutil.which("pip"), "install", "."]
     if EDIT:
         cmd.insert(2, "-e")
@@ -287,9 +288,11 @@ def upgrade_package(current, version):
         cmd.insert(1, "--verbose")
     elif VERBOSE == -1:
         cmd.insert(1, "--quiet")
-    #environ["CORE4_CALL"] = "1"
-    Popen(cmd, env=environ).wait()
-    return proj_commit
+    env = os.environ.copy()
+    if CORE4_FE != 0:
+        env["CORE4_FE"] = "1"
+    Popen(cmd, env=env).wait()
+    return True
 
 
 class BuildPyCommand(build_py):
@@ -342,44 +345,63 @@ def setup(*args, **kwargs):
         pkg_info = find_lib(kwargs["name"])
         if pkg_info and os.path.exists(pkg_info):
             output("read build info from {}", pkg_info)
-            info = json.load(open(pkg_info, "r"))
+            prev = json.load(open(pkg_info, "r"))
         else:
-            info = {}
+            prev = {"core4": {}, "project": {}}
         upgrade_pip()
         upgrade_wheel()
+        core4_source = kwargs.get("core4", CORE4_SOURCE)
+        request = {
+            "core4": {
+                "commit": get_git_commit(core4_source),
+                "source": core4_source,
+                "webapps": CORE4_FE == 2
+            },
+            "project": {
+                "commit": check_output(
+                    ["git", "rev-parse", "HEAD"],
+                    universal_newlines=True).strip(),
+                "branch": check_output(
+                    ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+                    universal_newlines=True).strip(),
+                "version": kwargs.get("version", None),
+                "webapps": CORE4_FE != 0
+            },
+            "timestamp": datetime.datetime.now().isoformat(),
+            "runtime": None
+        }
+        upgrade = False
         if kwargs.get("name") != "core4":
-            core4_source = kwargs.pop("core4", CORE4_SOURCE)
-            core4_commit = upgrade_framework(
-                builddir, info.get("core4_commit", None), core4_source)
-        else:
-            core4_source = None
-            core4_commit = None
-        proj_version = kwargs.get("version", None)
-        proj_commit = upgrade_package(info.get("project_commit", None),
-                                      proj_version)
-        proj_branch = check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"],
-                                   universal_newlines=True).strip()
+            force = (prev["core4"].get("webapps", None)
+                     != request["core4"]["webapps"])
+            upgrade = upgrade_framework(
+                builddir=builddir,
+                source=request["core4"]["source"],
+                installed_commit=prev["core4"].get("commit", None),
+                latest_commit=request["core4"]["commit"],
+                force=force
+            ) or upgrade
+        force = (prev["project"].get("webapps", None)
+                 != request["project"]["webapps"])
+        upgrade = upgrade_package(
+            installed_commit=prev["project"].get("commit", None),
+            latest_commit=request["project"]["commit"],
+            version=request["project"]["version"],
+            force=force
+        ) or upgrade
         pkg_info = find_lib(kwargs["name"])
         output("remove build directory {}", builddir)
         shutil.rmtree(builddir)
         delta = datetime.datetime.now() - t0
+        request["runtime"] = delta.total_seconds()
         if pkg_info:
             if not TEST:
                 output("write build info {}", pkg_info)
-                json.dump({
-                    "core4_commit": core4_commit,
-                    "core4_source": core4_source,
-                    "project_commit": proj_commit,
-                    "project_branch": proj_branch,
-                    "project_version": kwargs.get("version", None),
-                    "timestamp": str(datetime.datetime.utcnow()),
-                    "runtime": delta.total_seconds()
-                }, open(pkg_info, "w"))
+                json.dump(request, open(pkg_info, "w"))
         else:
             output("failed to write build info")
         output("runtime {} ({}')", delta, int(delta.total_seconds()))
-        if ((proj_commit == info.get("project_commit", None))
-                and (core4_commit == info.get("core4_commit", None))):
+        if not upgrade:
             output("result: no changes")
             sys.exit(10)
         else:
