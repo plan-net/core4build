@@ -36,15 +36,15 @@ RLIB = "../lib/R"
 CWD = os.path.abspath(os.curdir)
 
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+# class bcolors:
+#     HEADER = '\033[95m'
+#     OKBLUE = '\033[94m'
+#     OKGREEN = '\033[92m'
+#     WARNING = '\033[93m'
+#     FAIL = '\033[91m'
+#     ENDC = '\033[0m'
+#     BOLD = '\033[1m'
+#     UNDERLINE = '\033[4m'
 
 
 def print_help():
@@ -107,8 +107,7 @@ def output(*args, **kwargs):
         p = args[1:]
     else:
         p = []
-    sys.stderr.write(bcolors.OKGREEN + "*** " + args[0].format(
-        *p, **kwargs) + "\n" + bcolors.ENDC)
+    sys.stderr.write("*** " + args[0].format(*p, **kwargs) + "\n")
     sys.stderr.flush()
 
 
