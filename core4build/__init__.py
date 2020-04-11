@@ -36,15 +36,15 @@ RLIB = "../lib/R"
 CWD = os.path.abspath(os.curdir)
 
 
-# class bcolors:
-#     HEADER = '\033[95m'
-#     OKBLUE = '\033[94m'
-#     OKGREEN = '\033[92m'
-#     WARNING = '\033[93m'
-#     FAIL = '\033[91m'
-#     ENDC = '\033[0m'
-#     BOLD = '\033[1m'
-#     UNDERLINE = '\033[4m'
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 def print_help():
@@ -53,6 +53,7 @@ usage: python setup.py
 
 Global options:
   --verbose (-v)      run verbosely
+  --nocolor (-n)      no colored output
   --quiet (-q)        run quietly
   --help (-h)         show detailed help message
   
@@ -67,6 +68,7 @@ Install options:
 option = {}
 argument = [sys.argv[0]]
 VERBOSE = 0
+COLOR = True
 EDIT = False
 TEST = False
 CORE4_FE = int(os.environ.get("CORE4_FE", "0"))
@@ -93,6 +95,9 @@ for elem in sys.argv[1:]:
     if elem.lower() == "--test" or elem.lower() == "-t":
         TEST = True
         swallow = True
+    if elem.lower() == "--nocolor" or elem.lower() == "-n":
+        COLOR = False
+        swallow = True
     if not swallow:
         argument.append(elem)
 sys.argv = argument
@@ -107,7 +112,11 @@ def output(*args, **kwargs):
         p = args[1:]
     else:
         p = []
+    if COLOR:
+        sys.stderr.write(bcolors.OKGREEN)
     sys.stderr.write("*** " + args[0].format(*p, **kwargs) + "\n")
+    if COLOR:
+        sys.stderr.write(bcolors.ENDC)
     sys.stderr.flush()
 
 
