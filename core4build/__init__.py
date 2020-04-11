@@ -378,25 +378,25 @@ def setup(*args, **kwargs):
             "timestamp": datetime.datetime.now().isoformat(),
             "runtime": None
         }
-        upgrade = False
+        upgrade_core4 = False
         if kwargs.get("name") != "core4":
             force = (prev["core4"].get("webapps", None)
                      != request["core4"]["webapps"])
-            upgrade = upgrade_framework(
+            upgrade_core4 = upgrade_framework(
                 builddir=builddir,
                 source=request["core4"]["source"],
                 installed_commit=prev["core4"].get("commit", None),
                 latest_commit=request["core4"]["commit"],
                 force=force
-            ) or upgrade
+            )
         force = (prev["project"].get("webapps", None)
                  != request["project"]["webapps"])
-        upgrade = upgrade_package(
+        upgrade_project = upgrade_package(
             installed_commit=prev["project"].get("commit", None),
             latest_commit=request["project"]["commit"],
             version=request["project"]["version"],
             force=force
-        ) or upgrade
+        )
         pkg_info = find_lib(kwargs["name"])
         output("remove build directory {}", builddir)
         shutil.rmtree(builddir)
@@ -409,12 +409,16 @@ def setup(*args, **kwargs):
         else:
             output("failed to write build info")
         output("runtime {} ({}')", delta, int(delta.total_seconds()))
-        if not upgrade:
+        upgrade = upgrade_core4 + upgrade_project
+        if upgrade == 0:
             output("result: no changes")
-            sys.exit(10)
+        elif upgrade == 1:
+            output("result: upgrade core4os")
+        elif upgrade == 2:
+            output("result: upgrade project")
         else:
-            output("result: upgrade")
-            sys.exit(0)
+            output("result: upgrade core4os and project")
+        sys.exit(upgrade)
     else:
         check_requirements()
         kwargs["cmdclass"] = {
