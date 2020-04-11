@@ -320,19 +320,22 @@ class DevelopCommand(develop):
 
 
 def find_lib(name):
-    info = check_output(
-        [shutil.which("pip"), "show", "-f", name],
-        universal_newlines=True)
-    match = re.search(
-        r"^location\s*\:\s*(.+?)\s*$", info, re.I + re.S + re.M)
-    location = match.groups()[0].strip()
-    match = re.search(
-        r"^\s+?([^\n]+\-info[\/\\]top_level\.txt)\s*$", info,
-        re.I + re.S + re.M)
-    pkg_info = match.groups()[0].strip()
-    if location and pkg_info:
-        return os.path.join(
-            location, os.path.dirname(pkg_info), "core4.json")
+    try:
+        info = check_output(
+            [shutil.which("pip"), "show", "-f", name],
+            universal_newlines=True)
+        match = re.search(
+            r"^location\s*\:\s*(.+?)\s*$", info, re.I + re.S + re.M)
+        location = match.groups()[0].strip()
+        match = re.search(
+            r"^\s+?([^\n]+\-info[\/\\]top_level\.txt)\s*$", info,
+            re.I + re.S + re.M)
+        pkg_info = match.groups()[0].strip()
+        if location and pkg_info:
+            return os.path.join(
+                location, os.path.dirname(pkg_info), "core4.json")
+    except:
+        pass
     return None
 
 
