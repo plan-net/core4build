@@ -167,15 +167,14 @@ def get_git_commit(url):
 def upgrade_framework(builddir, source, installed_commit, latest_commit,
                       force):
     if parse_version(core4_version) == (0, 0, 0):
-        output("core4 upgrade from {} at {}", source, latest_commit)
+        output("core4 upgrade: from None to {}", latest_commit)
     else:
         if latest_commit != installed_commit or force:
-            output("core4 upgrade from {}, {} => {}", source,
-                   installed_commit, latest_commit)
+            output("core4 upgrade: from {} to {}", installed_commit,
+                   latest_commit)
         else:
             output(
-                "skip core4 upgrade from {}, up-to-date at {} ({})", source,
-                installed_commit, core4_version)
+                "core4 upgrade: skip at {}", installed_commit)
             return False
     if TEST:
         output("DRY RUN!")
@@ -279,13 +278,11 @@ def check_requirements():
             universal_newlines=True)
 
 
-def upgrade_package(installed_commit, latest_commit, version, force):
+def upgrade_package(installed_commit, latest_commit, force):
     if installed_commit == latest_commit and not force:
-        output("skip project upgrade, up-to-date at {} ({})", installed_commit,
-               version)
+        output("project upgrade: skip at {}")
         return False
-    output("project upgrade {} => {} ({})", installed_commit, latest_commit,
-           version)
+    output("project upgrade: from {} to {}", installed_commit, latest_commit)
     if TEST:
         output("DRY RUN!")
         return True
@@ -393,10 +390,9 @@ def setup(*args, **kwargs):
                  != request["project"]["webapps"])
         upgrade_project = 0
         if upgrade_package(
-            installed_commit=prev["project"].get("commit", None),
-            latest_commit=request["project"]["commit"],
-            version=request["project"]["version"],
-            force=force):
+                installed_commit=prev["project"].get("commit", None),
+                latest_commit=request["project"]["commit"],
+                force=force):
             upgrade_project = 2
         pkg_info = find_lib(kwargs["name"])
         output("remove build directory {}", builddir)
