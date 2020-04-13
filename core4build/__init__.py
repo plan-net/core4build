@@ -280,7 +280,7 @@ def check_requirements():
 
 def upgrade_package(installed_commit, latest_commit, force):
     if installed_commit == latest_commit and not force:
-        output("project upgrade: skip at {}")
+        output("project upgrade: skip at {}", latest_commit)
         return False
     output("project upgrade: from {} to {}", installed_commit, latest_commit)
     if TEST:
