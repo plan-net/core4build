@@ -265,6 +265,7 @@ def restore_manifest():
     if os.path.exists(".MANIFEST.in"):
         output("restore MANIFEST.in")
         shutil.copy(".MANIFEST.in", "MANIFEST.in")
+        os.unlink(".MANIFEST.in")
     elif os.path.exists("MANIFEST.in"):
         output("remove MANIFEST.in")
         os.unlink("MANIFEST.in")
