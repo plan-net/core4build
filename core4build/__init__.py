@@ -31,7 +31,7 @@ import datetime
 
 PIP_REQUIRED = (19, 0, 0)
 WHEEL_REQUIRED = (0, 34, 0)
-CORE4_SOURCE = "https://github.com/plan-net/core4.git@develop.auth"
+CORE4_SOURCE = "https://github.com/plan-net/core4.git"
 RLIB = "../lib/R"
 CWD = os.path.abspath(os.curdir)
 
