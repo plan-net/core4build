@@ -262,13 +262,14 @@ def build_webapp(packages):
 
 
 def restore_manifest():
-    if os.path.exists(".MANIFEST.in"):
-        output("restore MANIFEST.in")
-        shutil.copy(".MANIFEST.in", "MANIFEST.in")
-        os.unlink(".MANIFEST.in")
-    elif os.path.exists("MANIFEST.in"):
-        output("remove MANIFEST.in")
-        os.unlink("MANIFEST.in")
+    if CORE4_FE != 0:
+        if os.path.exists(".MANIFEST.in"):
+            output("restore MANIFEST.in")
+            shutil.copy(".MANIFEST.in", "MANIFEST.in")
+            os.unlink(".MANIFEST.in")
+        elif os.path.exists("MANIFEST.in"):
+            output("remove MANIFEST.in")
+            os.unlink("MANIFEST.in")
 
 
 def check_requirements():
@@ -424,3 +425,8 @@ def setup(*args, **kwargs):
             'develop': DevelopCommand
         }
         orig_setup(**kwargs)
+        try:
+            import core4
+        except:
+            core4_source = kwargs.get("core4", CORE4_SOURCE)
+            pip_main("install", "git+" + core4_source)
