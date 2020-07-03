@@ -417,6 +417,17 @@ def setup(*args, **kwargs):
             output("result: upgrade project")
         else:
             output("result: upgrade core4os and project")
+        from rpy2.robjects.packages import importr, isinstalled
+        r_requirements = "r.txt"
+        with open(r_requirements, 'r') as file:
+            data = file.read()
+        packages_required = data.split(sep='\n')
+        utils = importr('utils')
+        for package in packages_required:
+            output('Checking package: {}', package)
+            output('Installed?: {}', isinstalled(package, lib_loc=rlib))
+            if not (isinstalled(package, lib_loc=rlib)):
+                utils.install_packages(package, lib=rlib, verbose=True)
         sys.exit(upgrade)
     else:
         check_requirements()
