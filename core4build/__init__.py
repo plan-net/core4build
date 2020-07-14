@@ -424,10 +424,11 @@ def setup(*args, **kwargs):
         packages_required = data.split(sep='\n')
         utils = importr('utils')
         for package in packages_required:
-            output('Checking package: {}', package)
-            output('Installed?: {}', isinstalled(package, lib_loc=rlib))
-            if not (isinstalled(package, lib_loc=rlib)):
-                utils.install_packages(package, lib=rlib, verbose=False)
+            if package != '':
+                output('Checking package: {}', package)
+                output('Installed?: {}', isinstalled(package, lib_loc=rlib))
+                if not (isinstalled(package, lib_loc=rlib)):
+                    utils.install_packages(package, lib=rlib, verbose=False)
         sys.exit(upgrade)
     else:
         check_requirements()
