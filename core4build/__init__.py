@@ -425,7 +425,7 @@ def setup(*args, **kwargs):
         utils = importr('utils')
         utils.chooseCRANmirror(ind=1)
         for package in packages_required:
-            if package != '':
+            if package is not None:
                 output('Checking package: {}', package)
                 output('Installed?: {}', isinstalled(package, lib_loc=rlib))
                 if not (isinstalled(package, lib_loc=rlib)):
