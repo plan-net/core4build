@@ -423,7 +423,6 @@ def setup(*args, **kwargs):
             data = file.read()
         packages_required = data.split(sep='\n')
         utils = importr('utils')
-        utils.chooseCRANmirror(ind=1)
         for package in packages_required:
             if package is not None:
                 output('Checking package: {}', package)
