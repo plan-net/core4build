@@ -424,7 +424,7 @@ def setup(*args, **kwargs):
         packages_required = data.split(sep='\n')
         utils = importr('utils')
         for package in packages_required:
-            if package is not None:
+            if package is not None and package != '':
                 output('Checking package: {}', package)
                 output('Installed?: {}', isinstalled(package, lib_loc=rlib))
                 if not (isinstalled(package, lib_loc=rlib)):
