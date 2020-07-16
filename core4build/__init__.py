@@ -428,7 +428,8 @@ def setup(*args, **kwargs):
                 output('Checking package: {}', package)
                 output('Installed?: {}', isinstalled(package, lib_loc=rlib))
                 if not (isinstalled(package, lib_loc=rlib)):
-                    utils.install_packages(package, lib=rlib, verbose=False)
+                    utils.install_packages(package, lib=rlib, verbose=False,
+                                           quiet=True)
         sys.exit(upgrade)
     else:
         check_requirements()
