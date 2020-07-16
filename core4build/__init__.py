@@ -420,7 +420,7 @@ def setup(*args, **kwargs):
         from rpy2.robjects.packages import importr, isinstalled
         r_requirements = "r.txt"
         if not os.path.exists(r_requirements):
-            with open(r_requirements, 'r+', encoding="utf-8") as file:
+            with open(r_requirements, 'w+', encoding="utf-8") as file:
                 file.write('mongolite\nfeather')
         with open(r_requirements, 'r') as file:
             data = file.read()
