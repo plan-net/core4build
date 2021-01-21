@@ -34,6 +34,7 @@ WHEEL_REQUIRED = (0, 34, 0)
 CORE4_SOURCE = "https://github.com/plan-net/core4.git"
 RLIB = "../lib/R"
 CWD = os.path.abspath(os.curdir)
+R_DEFAULT = ("mongoliste", "feather")
 
 
 class bcolors:
@@ -347,7 +348,9 @@ def install_r_packages(rlib):
     else:
         data = ""
     packages_required = data.split(sep='\n')
-    packages_required = ["mongolite", "feather"] + packages_required
+    for default in R_DEFAULT:
+        if default not in packages_required:
+            packages_required.append(default)
     utils = importr('utils')
     utils.chooseCRANmirror(ind=1)
     for package in packages_required:
