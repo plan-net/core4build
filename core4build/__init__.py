@@ -34,7 +34,7 @@ WHEEL_REQUIRED = (0, 34, 0)
 CORE4_SOURCE = "https://github.com/plan-net/core4.git"
 RLIB = "../lib/R"
 CWD = os.path.abspath(os.curdir)
-R_DEFAULT = ("mongoliste", "feather")
+R_DEFAULT = ("mongolite", "feather")
 
 
 class bcolors:
